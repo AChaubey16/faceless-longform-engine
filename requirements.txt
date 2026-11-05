@@ -1,0 +1,13 @@
+groq>=0.11.0
+pyyaml>=6.0.1
+kokoro-onnx>=0.3.2
+faster-whisper>=1.0.3
+diffusers>=0.27.2
+transformers>=4.39.0
+accelerate>=0.28.0
+safetensors>=0.4.2
+pillow>=10.2.0
+numpy>=1.26.4
+soundfile>=0.12.1
+pydub>=0.25.1
+huggingface-hub>=0.22.2

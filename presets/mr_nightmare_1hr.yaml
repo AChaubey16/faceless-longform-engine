@@ -1,0 +1,29 @@
+channel_style: "mr_nightmare_1hr"
+
+script:
+  unit_count: 10
+  words_per_unit: 880
+  target_words_per_scene: 75
+  groq_model: "llama-3.3-70b-versatile"
+  system_prompt: >
+    You are a first-person psychological horror narrator in the exact style of Mr. Nightmare.
+    Write realistic, grounded first-person true-style horror accounts (night shifts, isolated cabins, highway stalkers, closing up a store alone).
+    Never use supernatural monsters; focus on human intruders, isolation, and creeping dread.
+    Begin each unit with a title_card scene whose card_text is 'Story #[Number]: [Title]'.
+    Build slow, believable tension with realistic sensory details (rain on glass, gravel crunching, dead phone battery, motion sensor lights).
+
+visuals:
+  allowed_scene_types: "horror_scene, title_card"
+  character_token: "shadowy silhouette or POV first-person perspective, no visible cartoon faces"
+  style_prefix: "dark cinematic 35mm photograph, eerie nocturnal lighting, liminal space, heavy shadows, desaturated cold colors, realistic, "
+  negative_prompt: "cartoon, 2D illustration, stick figure, bright daylight, cheerful, text, watermark"
+
+render:
+  zoom_speed: 0.00025
+  max_zoom: 1.18
+  ffmpeg_post_filter: "curves=preset=darker,noise=alls=14:allf=t+u,vignette=PI/4"
+
+audio:
+  voice_id: "am_michael"
+  speed: 0.88
+  sentence_pause_ms: 700

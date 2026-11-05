@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+output/
+*.mp4
+*.wav
+*.png
+*.onnx
+*.safetensors
+.DS_Store

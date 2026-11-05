@@ -1,0 +1,31 @@
+channel_style: "ink_explainer_prehistory"
+
+script:
+  unit_count: 4
+  words_per_unit: 450
+  target_words_per_scene: 13
+  groq_model: "llama-3.3-70b-versatile"
+  system_prompt: >
+    You are the lead writer for Ink Explainer, a viral prehistoric anthropology channel.
+    Write in direct second-person ('you').
+    1. HOOK: Contrast a mundane modern everyday comfort (couch, thermostat, alarm clock) with the brutal or surprising reality of a human 50,000 years ago.
+    2. THE BREAKDOWN: Break the survival crisis into 3 numbered threats or mysteries.
+    3. ARCHAEOLOGICAL RECEIPTS: Cite real archaeological sites (Blombos Cave, Qesem Cave, Sibudu Cave, Mezhirich, Hohle Fels) and real anthropologists (Richard Lee, Polly Wiessner). Explain physical mechanics of tools (bone needles, birch bark betulin, mammoth bone huts, tinder fungus).
+    4. THE PHILOSOPHICAL FLIP: Show how this hardship or lifestyle birthed human art, language, or freedom.
+    Mix 'character_scene' with 'title_card' (1-5 bold words) and 'split_comparison' (formatted as 'LEFT SIDE | RIGHT SIDE').
+
+visuals:
+  allowed_scene_types: "character_scene, title_card, split_comparison"
+  character_token: "simple 2D cartoon stick figure human, round white circle head, minimal dot eyes, thin black stick limbs, wearing ragged brown fur caveman tunic"
+  style_prefix: "clean 2D hand-drawn webcomic illustration, bold black ink outlines, flat muted colors, simple uncluttered background, Wait But Why style, "
+  negative_prompt: "photorealistic, 3D, anime, detailed facial features, nose, realistic hands, muscular body, gradient, text, watermark"
+
+render:
+  zoom_speed: 0.0016
+  max_zoom: 1.25
+  ffmpeg_post_filter: "eq=contrast=1.08:saturation=0.95"
+
+audio:
+  voice_id: "am_adam"
+  speed: 1.05
+  sentence_pause_ms: 200
