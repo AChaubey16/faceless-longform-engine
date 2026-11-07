@@ -1,13 +1,20 @@
 channel_name: "History in Minutes"
-niche: "Fast-Paced Ancient & Medieval Military & Civilizational History"
-target_duration_min: 10
-chapters_count: 5
-scenes_per_chapter: 6
+channel_style: "history_in_minutes"
 
-tts:
-  voice: "bm_george"
+script:
+  groq_model: "openai/gpt-oss-120b"
+  unit_count: 5
+  words_per_unit: 300
+  target_words_per_scene: 45
+  system_prompt: >
+    You are a fast-paced military and civilizational history documentary writer.
+    Focus on decisive battles, engineering feats, strategy, and vivid historical turning points.
+    Avoid cliches and keep every scene visually concrete.
+
+audio:
+  voice_id: "bm_george"
   speed: 1.05
-  lang: "en-us"
+  sentence_pause_ms: 220
 
 visuals:
   engine: "flux"
@@ -16,15 +23,19 @@ visuals:
   guidance_scale: 0.0
   width: 1280
   height: 720
+  allowed_scene_types:
+    - "character_scene"
+    - "title_card"
+    - "split_comparison"
   style_prefix: >
     2D historical documentary graphic novel illustration, detailed hand-drawn ink linework,
     warm aged parchment and sepia-toned color palette, dramatic rim lighting, classic historical
     infographic aesthetic, crisp comic-book shading, textured paper grain.
 
-render_theme:
+render:
+  zoom_speed: 0.0009
+  max_zoom: 1.16
+  ffmpeg_post_filter: "eq=contrast=1.05:saturation=0.95"
   bg_color: [236, 226, 208]
-  card_bg: [32, 26, 22, 235]
-  text_color: [245, 238, 225]
+  text_color: [32, 26, 22]
   accent_color: [212, 168, 67]
-  vignette_alpha: 110
-  particles: false
