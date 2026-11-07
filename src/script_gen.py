@@ -1,8 +1,44 @@
 import os
+import re
 import json
 import time
 import yaml
 from groq import Groq
+
+def _call_groq_json(client, model_name: str, system_prompt: str, user_prompt: str, max_retries: int = 4) -> dict:
+    sys_msg = system_prompt.strip() + "\nAlways respond with strictly valid, raw JSON only."
+    for attempt in range(1, max_retries + 1):
+        try:
+            use_json_mode = (attempt <= 2)
+            kwargs = {
+                "model": model_name,
+                "messages": [
+                    {"role": "system", "content": sys_msg},
+                    {"role": "user", "content": user_prompt}
+                ],
+                "temperature": max(0.3, 0.7 - (attempt - 1) * 0.15),
+                "max_tokens": 4096,
+            }
+            if use_json_mode:
+                kwargs["response_format"] = {"type": "json_object"}
+
+            resp = client.chat.completions.create(**kwargs)
+            content = (resp.choices[0].message.content or "").strip()
+
+            if "```" in content:
+                match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", content, re.DOTALL)
+                if match:
+                    content = match.group(1)
+            start_idx = content.find("{")
+            end_idx = content.rfind("}")
+            if start_idx != -1 and end_idx != -1:
+                content = content[start_idx:end_idx + 1]
+
+            return json.loads(content)
+        except Exception as e:
+            print(f"    [!] Groq JSON attempt {attempt}/{max_retries} failed ({e}). Retrying in 2s...")
+            time.sleep(2)
+    raise RuntimeError(f"Failed to generate valid JSON from Groq after {max_retries} attempts.")
 
 def generate_full_storyboard(topic: str, preset_path: str, project_dir: str) -> str:
     os.makedirs(project_dir, exist_ok=True)
@@ -13,10 +49,10 @@ def generate_full_storyboard(topic: str, preset_path: str, project_dir: str) -> 
 
     api_key = os.environ.get("GROQ_API_KEY")
     if not api_key:
-        raise ValueError("GROQ_API_KEY environment variable is not set! Set os.environ['GROQ_API_KEY'] = 'gsk_...'")
+        raise ValueError("GROQ_API_KEY environment variable is not set!")
 
     client = Groq(api_key=api_key)
-    model_name = preset["script"].get("groq_model", "gpt-oss-120b")
+    model_name = preset["script"].get("groq_model", "openai/gpt-oss-120b")
     num_units = preset["script"]["unit_count"]
     words_per_unit = preset["script"]["words_per_unit"]
     words_per_scene = preset["script"]["target_words_per_scene"]
@@ -41,16 +77,7 @@ def generate_full_storyboard(topic: str, preset_path: str, project_dir: str) -> 
           ]
         }}
         """
-        outline_resp = client.chat.completions.create(
-            model=model_name,
-            messages=[
-                {"role": "system", "content": preset["script"]["system_prompt"]},
-                {"role": "user", "content": outline_prompt}
-            ],
-            response_format={"type": "json_object"},
-            temperature=0.7,
-        )
-        master_data = json.loads(outline_resp.choices[0].message.content)
+        master_data = _call_groq_json(client, model_name, preset["script"]["system_prompt"], outline_prompt)
         with open(outline_file, "w") as of:
             json.dump(master_data, of, indent=2)
 
@@ -68,6 +95,7 @@ def generate_full_storyboard(topic: str, preset_path: str, project_dir: str) -> 
                     s["scene_id"] = scene_counter
                     scene_counter += 1
                 master_data["chapters"].append(chapter_data)
+                print(f"[*] Loaded cached Unit {u_num}/{num_units}: {unit['title']} ({len(chapter_data['scenes'])} scenes)")
                 continue
 
         num_scenes = max(5, words_per_unit // words_per_scene)
@@ -94,16 +122,8 @@ def generate_full_storyboard(topic: str, preset_path: str, project_dir: str) -> 
         }}
         Note: camera_motion must be one of: zoom_in, zoom_out, pan_right, pan_left.
         """
-        resp = client.chat.completions.create(
-            model=model_name,
-            messages=[
-                {"role": "system", "content": preset["script"]["system_prompt"]},
-                {"role": "user", "content": unit_prompt}
-            ],
-            response_format={"type": "json_object"},
-            temperature=0.72,
-        )
-        chapter_data = json.loads(resp.choices[0].message.content)
+        chapter_data = _call_groq_json(client, model_name, preset["script"]["system_prompt"], unit_prompt)
+
         for s in chapter_data["scenes"]:
             s["scene_id"] = scene_counter
             scene_counter += 1
@@ -113,9 +133,9 @@ def generate_full_storyboard(topic: str, preset_path: str, project_dir: str) -> 
 
         master_data["chapters"].append(chapter_data)
         print(f"[+] Generated Unit {u_num}/{num_units}: {unit['title']} ({len(chapter_data['scenes'])} scenes)")
-        time.sleep(1.5)  # Respect Groq free-tier rate limits
+        time.sleep(1)
 
-    with open(storyboard_path, "w") as f:
-        json.dump(master_data, f, indent=2)
+    with open(storyboard_path, "w") as sf:
+        json.dump(master_data, sf, indent=2)
 
     return storyboard_path
