@@ -16,7 +16,7 @@ def generate_full_storyboard(topic: str, preset_path: str, project_dir: str) -> 
         raise ValueError("GROQ_API_KEY environment variable is not set! Set os.environ['GROQ_API_KEY'] = 'gsk_...'")
 
     client = Groq(api_key=api_key)
-    model_name = preset["script"].get("groq_model", "llama-3.3-70b-versatile")
+    model_name = preset["script"].get("groq_model", "gpt-oss-120b")
     num_units = preset["script"]["unit_count"]
     words_per_unit = preset["script"]["words_per_unit"]
     words_per_scene = preset["script"]["target_words_per_scene"]
