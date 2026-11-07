@@ -1,30 +1,30 @@
-channel_style: "history_in_minutes"
+channel_name: "History in Minutes"
+niche: "Fast-Paced Ancient & Medieval Military & Civilizational History"
+target_duration_min: 10
+chapters_count: 5
+scenes_per_chapter: 6
 
-script:
-  unit_count: 5
-  words_per_unit: 600
-  target_words_per_scene: 18
-  groq_model: "llama-3.3-70b-versatile"
-  system_prompt: >
-    You are the lead writer for 'History in Minutes', a fast-paced geopolitical and historical documentary channel.
-    Write in an engaging, authoritative documentary narrator voice.
-    1. THE HOOK: Open with a striking physical object, map contradiction, or secret historical custom (e.g., stacked maps drawn with wax pencils, green ink signatures).
-    2. THE TIMELINE & RECEIPTS: Unspool history chronologically. Cite specific years, treaties, generals, intelligence bureaus, and primary sources.
-    3. SCENE BREAKDOWN: Mix 'character_scene' (historical figures, diplomats, soldiers, spies) with 'title_card' (key years and turning points like '1914: THE FIRST LINE') and 'split_comparison'.
-    4. THE PHILOSOPHICAL WRAP-UP: End on a sharp, memorable reflection connecting the historical events back to modern borders or institutions.
+tts:
+  voice: "bm_george"
+  speed: 1.05
+  lang: "en-us"
 
 visuals:
-  allowed_scene_types: "character_scene, title_card, split_comparison"
-  character_token: "detailed historical oil painting style depiction of historical figures, period-accurate attire, dramatic chiaroscuro museum lighting"
-  style_prefix: "rich historical documentary illustration, dramatic cinematic lighting, muted earth tones, archival history aesthetic, highly detailed, "
-  negative_prompt: "cartoon, stick figure, anime, 3D render, bright neon colors, modern street clothing, text, watermark"
+  engine: "flux"
+  model_id: "black-forest-labs/FLUX.1-schnell"
+  steps: 4
+  guidance_scale: 0.0
+  width: 1280
+  height: 720
+  style_prefix: >
+    2D historical documentary graphic novel illustration, detailed hand-drawn ink linework,
+    warm aged parchment and sepia-toned color palette, dramatic rim lighting, classic historical
+    infographic aesthetic, crisp comic-book shading, textured paper grain.
 
-render:
-  zoom_speed: 0.0012
-  max_zoom: 1.20
-  ffmpeg_post_filter: "eq=contrast=1.1:saturation=0.9,vignette=PI/5"
-
-audio:
-  voice_id: "am_fenrir"
-  speed: 1.02
-  sentence_pause_ms: 280
+render_theme:
+  bg_color: [236, 226, 208]
+  card_bg: [32, 26, 22, 235]
+  text_color: [245, 238, 225]
+  accent_color: [212, 168, 67]
+  vignette_alpha: 110
+  particles: false
