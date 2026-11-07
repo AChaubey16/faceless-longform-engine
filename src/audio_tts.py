@@ -1,8 +1,8 @@
 import os
+import urllib.request
 import numpy as np
 import soundfile as sf
 from kokoro_onnx import Kokoro
-from huggingface_hub import hf_hub_download
 
 class AudioEngine:
     def __init__(self):
@@ -11,9 +11,26 @@ class AudioEngine:
     def load_model(self):
         if self.kokoro is not None:
             return
-        model_path = hf_hub_download(repo_id="hexgrad/Kokoro-82M", filename="kokoro-v1.0.onnx")
-        voices_path = hf_hub_download(repo_id="hexgrad/Kokoro-82M", filename="voices.json")
-        self.kokoro = Kokoro(model_path, voices_path)
+        
+        model_filename = "kokoro-v0_19.onnx"
+        voices_filename = "voices.bin"
+
+        if not os.path.exists(model_filename):
+            print("[+] Downloading kokoro-v0_19.onnx from GitHub releases...")
+            urllib.request.urlretrieve(
+                "[https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files/kokoro-v0_19.onnx](https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files/kokoro-v0_19.onnx)",
+                model_filename
+            )
+
+        if not os.path.exists(voices_filename):
+            print("[+] Downloading voices.bin from GitHub releases...")
+            urllib.request.urlretrieve(
+                "[https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files/voices.bin](https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files/voices.bin)",
+                voices_filename
+            )
+
+        print("[+] Loading Kokoro ONNX engine...")
+        self.kokoro = Kokoro(model_filename, voices_filename)
 
     def generate_chapter_audio(self, chapter: dict, preset: dict, project_dir: str) -> dict:
         self.load_model()
@@ -30,13 +47,11 @@ class AudioEngine:
                 scene["audio_duration"] = round(info.duration, 2)
                 continue
 
-            text = scene["narration_text"].strip()
+            text = scene.get("narration_text", "").strip()
             if not text:
                 text = "..."
 
             samples, sample_rate = self.kokoro.create(text, voice=voice_id, speed=speed, lang="en-us")
-
-            # Append natural pause padding at the end of each scene clip
             pad_samples = int(sample_rate * (pause_ms / 1000.0))
             padded_audio = np.concatenate([samples, np.zeros(pad_samples, dtype=np.float32)])
 
