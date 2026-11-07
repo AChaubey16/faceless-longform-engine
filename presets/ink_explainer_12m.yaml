@@ -4,6 +4,16 @@ target_duration_min: 12
 chapters_count: 6
 scenes_per_chapter: 6
 
+script:
+  groq_model: "openai/gpt-oss-120b"
+  unit_count: 6
+  words_per_unit: 300
+  target_words_per_scene: 45
+  system_prompt: >
+    You are an expert educational history and anthropology scriptwriter in the style of Ink Explainer.
+    Write clear, fascinating, conversational, evidence-backed storytelling about how ancient humans lived.
+    Avoid cliches and keep every scene visually concrete.
+
 tts:
   voice: "af_bella"
   speed: 1.0
