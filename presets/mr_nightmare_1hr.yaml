@@ -1,13 +1,20 @@
 channel_name: "Midnight Witness"
-niche: "First-Person True Scary Stories & Nighttime Encounters"
-target_duration_min: 60
-chapters_count: 10
-scenes_per_chapter: 8
+channel_style: "mr_nightmare_1hr"
 
-tts:
-  voice: "am_adam"
+script:
+  groq_model: "openai/gpt-oss-120b"
+  unit_count: 10
+  words_per_unit: 900
+  target_words_per_scene: 55
+  system_prompt: >
+    You are a master first-person true horror storyteller in the style of Mr. Nightmare.
+    Build slow-burning dread, realistic everyday settings at night, sensory details, and chilling encounters.
+    Avoid cliches and keep every scene visually concrete.
+
+audio:
+  voice_id: "am_adam"
   speed: 0.90
-  lang: "en-us"
+  sentence_pause_ms: 380
 
 visuals:
   engine: "flux"
@@ -16,15 +23,18 @@ visuals:
   guidance_scale: 0.0
   width: 1280
   height: 720
+  allowed_scene_types:
+    - "character_scene"
+    - "title_card"
   style_prefix: >
     Cinematic dark atmospheric horror illustration, moody low-key lighting, eerie shadows,
     volumetric fog, unsettling liminal space, gritty realistic digital painting, muted desaturated
     dark blue and charcoal palette, suspenseful thriller aesthetic, 4k high detail.
 
-render_theme:
-  bg_color: [8, 8, 12]
-  card_bg: [14, 14, 18, 230]
+render:
+  zoom_speed: 0.0005
+  max_zoom: 1.12
+  ffmpeg_post_filter: "vignette=PI/4,eq=brightness=-0.04:saturation=0.85"
+  bg_color: [10, 10, 14]
   text_color: [230, 230, 235]
   accent_color: [185, 28, 28]
-  vignette_alpha: 185
-  particles: true
