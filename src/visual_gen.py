@@ -1,92 +1,45 @@
 import os
-import textwrap
 import torch
-from PIL import Image, ImageDraw, ImageFont
-from diffusers import StableDiffusionXLPipeline, UNet2DConditionModel, EulerDiscreteScheduler
-from huggingface_hub import hf_hub_download
-from safetensors.torch import load_file
+from diffusers import FluxPipeline
 
-class UniversalVisualEngine:
-    def __init__(self, device=None):
-        self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
-        self.pipe = None
+def generate_storyboard_visuals(storyboard, preset, images_dir):
+    os.makedirs(images_dir, exist_ok=True)
+    vis_cfg = preset["visuals"]
+    model_id = vis_cfg.get("model_id", "black-forest-labs/FLUX.1-schnell")
+    style_prefix = vis_cfg["style_prefix"].strip() + " "
 
-    def load_sdxl_lightning(self):
-        if self.pipe is not None:
-            return
-        base = "stabilityai/stable-diffusion-xl-base-1.0"
-        repo = "ByteDance/SDXL-Lightning"
-        ckpt = "sdxl_lightning_4step_unet.safetensors"
+    pending_scenes = []
+    for ch in storyboard["chapters"]:
+        for sc in ch["scenes"]:
+            img_path = os.path.join(images_dir, f"{sc['scene_id']}.png")
+            if not os.path.exists(img_path):
+                pending_scenes.append((sc, img_path))
 
-        dtype = torch.float16 if self.device.startswith("cuda") else torch.float32
-        unet = UNet2DConditionModel.from_config(base, subfolder="unet").to(self.device, dtype)
-        unet.load_state_dict(load_file(hf_hub_download(repo, ckpt), device=self.device))
-        self.pipe = StableDiffusionXLPipeline.from_pretrained(
-            base, unet=unet, torch_dtype=dtype, variant="fp16" if dtype == torch.float16 else None
-        ).to(self.device)
-        self.pipe.scheduler = EulerDiscreteScheduler.from_config(
-            self.pipe.scheduler.config, timestep_spacing="trailing"
-        )
+    if not pending_scenes:
+        print("[*] All FLUX scene keyframes already exist in cache.")
+        return
 
-    def render_title_or_diagram_card(self, scene: dict, preset: dict, out_path: str):
-        style = preset["channel_style"]
-        if style.startswith("mr_nightmare"):
-            bg_color, text_color, accent_color = (8, 8, 10), (225, 225, 225), (180, 30, 30)
-        elif style.startswith("history_in_minutes"):
-            bg_color, text_color, accent_color = (28, 25, 23), (231, 229, 228), (217, 119, 6)
-        else:
-            bg_color, text_color, accent_color = (255, 255, 255), (20, 20, 20), (210, 45, 45)
+    print(f"[+] Loading {model_id} for {len(pending_scenes)} scenes...")
+    dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
+    pipe = FluxPipeline.from_pretrained(model_id, torch_dtype=dtype)
 
-        img = Image.new("RGB", (1920, 1080), color=bg_color)
-        draw = ImageDraw.Draw(img)
+    # Prevent OOM on Kaggle T4 GPUs
+    pipe.enable_model_cpu_offload()
+    pipe.vae.enable_slicing()
+    pipe.vae.enable_tiling()
 
-        try:
-            font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
-            main_font = ImageFont.truetype(font_path, 76)
-            sub_font = ImageFont.truetype(font_path, 52)
-        except Exception:
-            main_font = ImageFont.load_default()
-            sub_font = ImageFont.load_default()
-
-        card_text = (scene.get("card_text") or scene["narration_text"][:55]).upper()
-
-        if scene.get("scene_type") == "split_comparison" and "|" in card_text:
-            left_txt, right_txt = [t.strip() for t in card_text.split("|", 1)]
-            for y in range(120, 960, 40):
-                draw.line([(960, y), (960, y + 20)], fill=accent_color, width=6)
-            left_wrapped = "\n".join(textwrap.wrap(left_txt, width=18))
-            right_wrapped = "\n".join(textwrap.wrap(right_txt, width=18))
-            draw.multiline_text((480, 540), left_wrapped, fill=text_color, font=sub_font, anchor="mm", align="center")
-            draw.multiline_text((1440, 540), right_wrapped, fill=accent_color, font=sub_font, anchor="mm", align="center")
-        else:
-            wrapped = "\n".join(textwrap.wrap(card_text, width=26))
-            draw.multiline_text((960, 540), wrapped, fill=text_color, font=main_font, anchor="mm", align="center")
-
-        img.save(out_path)
-
-    def generate_scene_image(self, scene: dict, preset: dict, out_path: str) -> str:
-        if os.path.exists(out_path):
-            return out_path
-
-        s_type = scene.get("scene_type", "character_scene")
-        if s_type in ["title_card", "split_comparison"]:
-            self.render_title_or_diagram_card(scene, preset, out_path)
-            return out_path
-
-        self.load_sdxl_lightning()
-        style_prefix = preset["visuals"]["style_prefix"]
-        char_token = preset["visuals"].get("character_token", "")
-        full_prompt = f"{style_prefix} {char_token}, {scene['image_prompt']}"
-
-        image = self.pipe(
+    for idx, (sc, img_path) in enumerate(pending_scenes):
+        full_prompt = style_prefix + sc["visual_prompt"]
+        print(f"[+] Generating FLUX frame [{idx+1}/{len(pending_scenes)}]: {sc['scene_id']}")
+        image = pipe(
             prompt=full_prompt,
-            negative_prompt=preset["visuals"]["negative_prompt"],
-            num_inference_steps=4,
-            guidance_scale=0.0,
-            width=1344,
-            height=768,
+            num_inference_steps=int(vis_cfg.get("steps", 4)),
+            guidance_scale=float(vis_cfg.get("guidance_scale", 0.0)),
+            width=int(vis_cfg.get("width", 1280)),
+            height=int(vis_cfg.get("height", 720)),
+            generator=torch.Generator("cpu").manual_seed(1000 + idx)
         ).images[0]
+        image.save(img_path)
 
-        image = image.resize((1920, 1080), Image.Resampling.LANCZOS)
-        image.save(out_path)
-        return out_path
+    del pipe
+    torch.cuda.empty_cache()
