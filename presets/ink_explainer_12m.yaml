@@ -1,8 +1,5 @@
 channel_name: "Ink of Ages"
-niche: "Prehistoric Human History & Evolutionary Science"
-target_duration_min: 12
-chapters_count: 6
-scenes_per_chapter: 6
+channel_style: "ink_explainer_12m"
 
 script:
   groq_model: "openai/gpt-oss-120b"
@@ -14,10 +11,10 @@ script:
     Write clear, fascinating, conversational, evidence-backed storytelling about how ancient humans lived.
     Avoid cliches and keep every scene visually concrete.
 
-tts:
-  voice: "af_bella"
+audio:
+  voice_id: "af_bella"
   speed: 1.0
-  lang: "en-us"
+  sentence_pause_ms: 250
 
 visuals:
   engine: "flux"
@@ -26,15 +23,19 @@ visuals:
   guidance_scale: 0.0
   width: 1280
   height: 720
+  allowed_scene_types:
+    - "character_scene"
+    - "title_card"
+    - "split_comparison"
   style_prefix: >
     A clean 2D vector style illustration in the aesthetic of a modern educational explainer video.
     Simple cartoon character with a round gray head, wide expressive eyes, thick black marker outlines,
     flat color fills, minimalist whiteboard animation style, clean lines, high contrast.
 
-render_theme:
+render:
+  zoom_speed: 0.0008
+  max_zoom: 1.15
+  ffmpeg_post_filter: "eq=contrast=1.03:saturation=1.05"
   bg_color: [244, 241, 234]
-  card_bg: [244, 241, 234, 235]
   text_color: [24, 20, 22]
   accent_color: [236, 110, 30]
-  vignette_alpha: 65
-  particles: false
