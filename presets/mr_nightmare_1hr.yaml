@@ -1,29 +1,30 @@
-channel_style: "mr_nightmare_1hr"
+channel_name: "Midnight Witness"
+niche: "First-Person True Scary Stories & Nighttime Encounters"
+target_duration_min: 60
+chapters_count: 10
+scenes_per_chapter: 8
 
-script:
-  unit_count: 10
-  words_per_unit: 880
-  target_words_per_scene: 75
-  groq_model: "llama-3.3-70b-versatile"
-  system_prompt: >
-    You are a first-person psychological horror narrator in the exact style of Mr. Nightmare.
-    Write realistic, grounded first-person true-style horror accounts (night shifts, isolated cabins, highway stalkers, closing up a store alone).
-    Never use supernatural monsters; focus on human intruders, isolation, and creeping dread.
-    Begin each unit with a title_card scene whose card_text is 'Story #[Number]: [Title]'.
-    Build slow, believable tension with realistic sensory details (rain on glass, gravel crunching, dead phone battery, motion sensor lights).
+tts:
+  voice: "am_adam"
+  speed: 0.90
+  lang: "en-us"
 
 visuals:
-  allowed_scene_types: "horror_scene, title_card"
-  character_token: "shadowy silhouette or POV first-person perspective, no visible cartoon faces"
-  style_prefix: "dark cinematic 35mm photograph, eerie nocturnal lighting, liminal space, heavy shadows, desaturated cold colors, realistic, "
-  negative_prompt: "cartoon, 2D illustration, stick figure, bright daylight, cheerful, text, watermark"
+  engine: "flux"
+  model_id: "black-forest-labs/FLUX.1-schnell"
+  steps: 4
+  guidance_scale: 0.0
+  width: 1280
+  height: 720
+  style_prefix: >
+    Cinematic dark atmospheric horror illustration, moody low-key lighting, eerie shadows,
+    volumetric fog, unsettling liminal space, gritty realistic digital painting, muted desaturated
+    dark blue and charcoal palette, suspenseful thriller aesthetic, 4k high detail.
 
-render:
-  zoom_speed: 0.00025
-  max_zoom: 1.18
-  ffmpeg_post_filter: "curves=preset=darker,noise=alls=14:allf=t+u,vignette=PI/4"
-
-audio:
-  voice_id: "am_michael"
-  speed: 0.88
-  sentence_pause_ms: 700
+render_theme:
+  bg_color: [8, 8, 12]
+  card_bg: [14, 14, 18, 230]
+  text_color: [230, 230, 235]
+  accent_color: [185, 28, 28]
+  vignette_alpha: 185
+  particles: true
